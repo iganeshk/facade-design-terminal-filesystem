@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<project basedir="." name="HW11" xmlns:jacoco="antlib:org.jacoco.ant" default="test">
+  <property name="main.src.dir" value="${basedir}/src"/>
+  <property name="main.build.dir" value="${basedir}/bin"/>
+  <property name="test.build.dir" value="${basedir}/test/bin"/>
+  <property name="test.src.dir" value="${basedir}/test/src"/>
+  <property name="junit-report" value="${basedir}/test/reports/junit"/>
+  <property name="jacoco.report.dir" value="${basedir}/test/reports/coverage"/>
+  <property environment="env"/>
+  <path id="classpath.test">
+    <pathelement path="${env.JUNIT}"/>
+    <pathelement path="${env.HAMCREST_CORE}"/>
+    <pathelement path="${env.JACOCO}"/>
+    <pathelement location="${main.build.dir}"/>
+  </path>
+  <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+      <classpath path="${env.JACOCO}" />
+  </taskdef>  
+
+  <target name="clean">
+    <delete dir="${test.build.dir}" />
+    <delete dir="${basedir}/test/reports" />
+    <delete dir="${basedir}/test/junit" />
+    <delete dir="${main.build.dir}" />
+    <delete file="${basedir}/test/coverage.exec" />
+  </target>
+
+  <target name="init">
+    <mkdir dir="${main.build.dir}"/>
+    <mkdir dir="${test.build.dir}"/>
+    <mkdir dir="${junit-report}"/>
+  </target> 
+
+  <target depends="init" description="Compile the Source Directory" name="compile">
+    <javac destdir="${main.build.dir}" includeantruntime="false" srcdir="${main.src.dir}"/>
+  </target>
+
+  <target depends="compile" description="Compiles the Test Source" name="test-compile">
+    <mkdir dir="${test.build.dir}"/>
+    <javac destdir="${test.build.dir}" includeantruntime="false" srcdir="${test.src.dir}">
+      <classpath refid="classpath.test"/>
+      <classpath location="${main.build.dir}"/>
+      <classpath location="${test.build.dir}"/>
+    </javac>
+  </target>  
+
+  <target depends="test-compile" description="Perform test" name="junit">
+    <junit fork="true" haltonfailure="yes" printsummary="off">
+      <classpath>
+        <path refid="classpath.test"/>
+        <pathelement location="${main.build.dir}"/>
+        <pathelement location="${test.build.dir}"/>
+      </classpath>
+      <formatter type="plain" usefile="false"/>
+      <batchtest>
+        <fileset dir="${test.src.dir}" includes="**/*Test.java"/>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target depends="junit" description="Perform test" name="test">
+      <junit fork="true" haltonfailure="yes" printsummary="yes">
+        <classpath>
+          <path refid="classpath.test"/>
+          <pathelement location="${main.build.dir}"/>
+          <pathelement location="${test.build.dir}"/>
+        </classpath>
+        <formatter type="xml"/>
+        <batchtest todir="${junit-report}">
+          <fileset dir="${test.src.dir}" includes="**/*Test.java"/>
+        </batchtest>
+      </junit>
+    <junitreport todir="${junit-report}" tofile="TESTS-TestSuites.xml">
+      <fileset dir="${junit-report}" includes="*.xml"/>
+      <report format="frames" todir="${junit-report}"/>
+    </junitreport>
+
+  </target>
+</project>
